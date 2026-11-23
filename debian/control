@@ -1,0 +1,25 @@
+Source: ansible-collection-abraflexi
+Section: admin
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/VitexSoftware/ansible-collection-abraflexi
+Vcs-Git: https://github.com/VitexSoftware/ansible-collection-abraflexi.git
+Vcs-Browser: https://github.com/VitexSoftware/ansible-collection-abraflexi
+Rules-Requires-Root: no
+
+Package: ansible-collection-vitexus-abraflexi
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ ${misc:Depends},
+ ansible-core (>= 2.16) | ansible (>= 9),
+ python3-abraflexi,
+Description: Ansible collection for the AbraFlexi ERP
+ The vitexus.abraflexi collection manages records, attachments, labels,
+ reports and web hooks of the AbraFlexi (FlexiBee) economic system through
+ its REST API.
+ .
+ It also provides a lookup plugin, an inventory of companies and
+ the abraflexi_server role, which installs the AbraFlexi server.

@@ -1,5 +1,7 @@
 # Ansible collection vitexus.abraflexi
 
+![Logo](https://raw.githubusercontent.com/VitexSoftware/ansible-collection-abraflexi/main/ansible-collection-abraflexi.svg)
+
 Works with the AbraFlexi (FlexiBee) REST API through
 [python-abraflexi](https://github.com/VitexSoftware/python-abraflexi) and installs the AbraFlexi server.
 

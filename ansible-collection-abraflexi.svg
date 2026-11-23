@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Ansible collection for AbraFlexi</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f8a70"/>
+      <stop offset="1" stop-color="#0b3c49"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="104" fill="url(#bg)"/>
+  <!-- ledger page -->
+  <path d="M124 92h172l72 72v232a24 24 0 0 1-24 24H124a24 24 0 0 1-24-24V116a24 24 0 0 1 24-24z" fill="#f7f9f9"/>
+  <path d="M296 92l72 72h-52a20 20 0 0 1-20-20z" fill="#b9d8d0"/>
+  <g fill="none" stroke="#0b3c49" stroke-width="18" stroke-linecap="round">
+    <path d="M144 168h92M144 228h52M236 228h88M144 288h52M236 288h30M144 348h52"/>
+  </g>
+  <!-- automation: play button -->
+  <circle cx="352" cy="352" r="96" fill="#ffb703" stroke="#0b3c49" stroke-width="16"/>
+  <path d="M324 302l80 50-80 50z" fill="#0b3c49" stroke="#0b3c49" stroke-width="12" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,5 @@
+ansible-collection-abraflexi (1.0.2) UNRELEASED; urgency=medium
+
+  * Debian packaging of the vitexus.abraflexi Ansible collection.
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Mon, 23 Nov 2026 13:31:17 +0100

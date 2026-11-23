@@ -1,0 +1,9 @@
+galaxy.yml usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+README.md usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+LICENSE usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+CHANGELOG.rst usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+meta usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+plugins usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+roles usr/share/ansible/collections/ansible_collections/vitexus/abraflexi
+ansible-collection-abraflexi.svg usr/share/icons/hicolor/scalable/apps/
+debian/io.github.vitexsoftware.ansible_collection_abraflexi.metainfo.xml usr/share/metainfo/

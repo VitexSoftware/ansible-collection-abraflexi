@@ -1,0 +1,3 @@
+# Ansible requires this module shebang and replaces it at run time; with
+# /usr/bin/python3 it would ignore ansible_python_interpreter.
+ansible-collection-vitexus-abraflexi: unusual-interpreter /usr/bin/python [usr/share/ansible/collections/ansible_collections/vitexus/abraflexi/plugins/modules/*]

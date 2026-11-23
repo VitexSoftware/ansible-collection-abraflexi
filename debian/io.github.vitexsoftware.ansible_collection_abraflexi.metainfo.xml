@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="generic">
+  <id>io.github.vitexsoftware.ansible_collection_abraflexi</id>
+  <icon type="stock">ansible-collection-abraflexi</icon>
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later AND MIT</project_license>
+  <name>Ansible Collection for AbraFlexi</name>
+  <summary>Automate the AbraFlexi economic system with Ansible</summary>
+  <description>
+    <p>
+      Manage the AbraFlexi (FlexiBee) economic system from Ansible playbooks through its REST API.
+    </p>
+    <ul>
+      <li>Create, update, read and delete records, including document items</li>
+      <li>Lock or cancel documents, manage labels and attachments, and export reports</li>
+      <li>Manage change tracking and web hooks</li>
+      <li>Run playbooks over all companies of a server</li>
+      <li>Install the AbraFlexi server with a ready-made role</li>
+    </ul>
+  </description>
+  <categories>
+    <category>System</category>
+    <category>Office</category>
+  </categories>
+  <keywords>
+    <keyword>ansible</keyword>
+    <keyword>abraflexi</keyword>
+    <keyword>flexibee</keyword>
+    <keyword>accounting</keyword>
+  </keywords>
+  <url type="homepage">https://github.com/VitexSoftware/ansible-collection-abraflexi</url>
+  <url type="bugtracker">https://github.com/VitexSoftware/ansible-collection-abraflexi/issues</url>
+  <url type="vcs-browser">https://github.com/VitexSoftware/ansible-collection-abraflexi</url>
+  <developer id="cz.vitexsoftware">
+    <name>VitexSoftware</name>
+  </developer>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.0.2" date="2026-11-23">
+      <url>https://github.com/VitexSoftware/ansible-collection-abraflexi/releases/tag/v1.0.2</url>
+    </release>
+  </releases>
+</component>

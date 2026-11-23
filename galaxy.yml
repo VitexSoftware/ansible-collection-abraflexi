@@ -25,6 +25,7 @@ build_ignore:
   - '*.tar.gz'
   - .ansible
   - .claude
+  - debian
   - .ansible-lint
   - .pytest_cache
   - tests/output
