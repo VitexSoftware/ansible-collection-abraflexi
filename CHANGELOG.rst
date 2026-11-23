@@ -2,6 +2,11 @@
 vitexus.abraflexi changelog
 ===========================
 
+v1.0.2
+======
+
+- Added the role README required by Ansible Galaxy.
+
 v1.0.1
 ======
 
