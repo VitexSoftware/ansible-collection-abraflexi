@@ -1,0 +1,31 @@
+---
+# abraflexi-server depends on default-jdk-headless, which becomes the default
+# JVM on newer distributions, but the server only starts on Java 11.
+- name: Find Java 11
+  ansible.builtin.find:
+    paths: /usr/lib/jvm
+    patterns: ["java-11-openjdk-*", "temurin-11-*"]
+    file_type: directory
+  register: abraflexi_server_jvm
+  when: abraflexi_server_variant == 'abraflexi-server'
+
+- name: Select Java 11 for the server
+  ansible.builtin.lineinfile:
+    path: /etc/default/abraflexi
+    regexp: '^ABRAFLEXI_JAVA='
+    line: "ABRAFLEXI_JAVA={{ (abraflexi_server_jvm.files | map(attribute='path') | sort | first) }}/bin/java"
+  when:
+    - abraflexi_server_variant == 'abraflexi-server'
+    - abraflexi_server_jvm.files | length > 0
+  notify: Restart AbraFlexi
+
+- name: Enable and start the service
+  ansible.builtin.systemd_service:
+    name: "{{ abraflexi_server_spec.service }}"
+    enabled: "{{ abraflexi_server_service_enabled | bool }}"
+    state: started
+    daemon_reload: true
+  register: abraflexi_server_started
+
+- name: Apply pending restarts
+  ansible.builtin.meta: flush_handlers

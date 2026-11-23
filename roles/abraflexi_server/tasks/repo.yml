@@ -1,0 +1,49 @@
+---
+- name: Install repository prerequisites
+  ansible.builtin.apt:
+    name: [ca-certificates, gnupg, python3-debian]
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create the keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the VitexSoftware repository key
+  ansible.builtin.get_url:
+    url: "{{ abraflexi_server_repo_key_url }}"
+    dest: /etc/apt/keyrings/vitexsoftware.gpg
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Add the VitexSoftware repository
+  ansible.builtin.deb822_repository:
+    name: abraflexi-vitexsoftware
+    types: [deb]
+    uris: "{{ abraflexi_server_repo_url }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: [main]
+    signed_by: /etc/apt/keyrings/vitexsoftware.gpg
+  register: abraflexi_server_repo
+
+- name: Add the borrow suite
+  ansible.builtin.deb822_repository:
+    name: abraflexi-vitexsoftware-borrow
+    types: [deb]
+    uris: "{{ abraflexi_server_repo_url }}"
+    suites: borrow
+    components: [main]
+    signed_by: /etc/apt/keyrings/vitexsoftware.gpg
+  register: abraflexi_server_repo_borrow
+  when: abraflexi_server_variant == 'flexibee'
+
+- name: Update the package cache
+  ansible.builtin.apt:
+    update_cache: true
+  when: abraflexi_server_repo is changed or abraflexi_server_repo_borrow is changed
+  changed_when: false

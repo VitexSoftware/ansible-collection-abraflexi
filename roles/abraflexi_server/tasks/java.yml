@@ -1,0 +1,25 @@
+---
+- name: Look for the distribution Java package
+  ansible.builtin.command: "apt-cache madison {{ abraflexi_server_java_package }}"
+  register: abraflexi_server_java
+  changed_when: false
+  check_mode: false
+
+- name: Add the Adoptium repository
+  ansible.builtin.deb822_repository:
+    name: adoptium
+    types: [deb]
+    uris: "{{ abraflexi_server_adoptium_url }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: [main]
+    signed_by: "{{ abraflexi_server_adoptium_key_url }}"
+  register: abraflexi_server_adoptium
+  when: abraflexi_server_java.stdout | length == 0
+
+- name: Install Java
+  ansible.builtin.apt:
+    name: >-
+      {{ abraflexi_server_java_package if abraflexi_server_java.stdout | length > 0
+      else abraflexi_server_java_fallback_package }}
+    install_recommends: false
+    update_cache: "{{ abraflexi_server_adoptium is changed }}"

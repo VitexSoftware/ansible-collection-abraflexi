@@ -1,0 +1,189 @@
+---
+# Runs against a disposable company given by ABRAFLEXI_* variables.
+# Set ABRAFLEXI_TEST_COMPANY to the same company to confirm it.
+# Only records with the ANSIBLE_TEST_ prefix are written.
+- name: Integration tests
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    cust: ANSIBLE_TEST_C1
+    inv: ANSIBLE_TEST/F1
+  module_defaults:
+    group/vitexus.abraflexi.abraflexi:
+      validate_certs: false
+  tasks:
+    - name: Require confirmation that the company is disposable
+      ansible.builtin.assert:
+        that: lookup("env", "ABRAFLEXI_COMPANY") == lookup("env", "ABRAFLEXI_TEST_COMPANY")
+
+    - name: Tests
+      block:
+        - {name: Server info, vitexus.abraflexi.server_info: {}, register: srv}
+        - {name: Company info, vitexus.abraflexi.company_info: {company: "{{ lookup('env', 'ABRAFLEXI_COMPANY') }}"}, register: com}
+        - {name: Evidence list, vitexus.abraflexi.evidence_info: {}, register: evs}
+        - {name: Evidence info, vitexus.abraflexi.evidence_info: {evidence: faktura-vydana}, register: ev}
+        - name: Check info
+          ansible.builtin.assert:
+            that:
+              - srv.status.version is defined
+              - com.companies | length == 1
+              - evs.evidences | length > 50
+              - ev.properties.kod.type == 'string'
+              - ev.reports | length > 0
+
+        - name: Create in check mode
+          vitexus.abraflexi.record: &cust
+            evidence: adresar
+            code: "{{ cust }}"
+            external_id: "ansible:test:c1"
+            data: {nazev: Test, stat: code:CZ, platceDph: true, splatDny: 14, stitky: [VIP]}
+          check_mode: true
+          register: c0
+        - {name: Read missing, vitexus.abraflexi.record_info: {evidence: adresar, code: "{{ cust }}"}, register: miss}
+        - {name: Create, vitexus.abraflexi.record: *cust, register: c1}
+        - {name: Create again, vitexus.abraflexi.record: *cust, register: c2}
+        - name: Change
+          vitexus.abraflexi.record:
+            evidence: adresar
+            external_id: "ansible:test:c1"
+            data: {nazev: Test 2, stitky: [KONT]}
+          register: c3
+          diff: true
+        - name: Change again with relation by id
+          vitexus.abraflexi.record:
+            evidence: adresar
+            code: "{{ cust }}"
+            data: {nazev: Test 2, stitky: [KONT], stat: "{{ c3.record['stat@ref'] | basename | splitext | first }}"}
+          register: c4
+        - name: Unknown and read-only fields
+          vitexus.abraflexi.record:
+            evidence: adresar
+            code: "{{ cust }}"
+            data: {nesmysl: 1, lastUpdate: x}
+          register: bad
+          ignore_errors: true
+        - name: Wrong evidence
+          vitexus.abraflexi.record: {evidence: nesmysl, code: X, state: absent}
+          register: badev
+          ignore_errors: true
+        - name: Check record
+          ansible.builtin.assert:
+            that:
+              - c0 is changed and miss.records == []
+              - c1 is changed and c1.record.kod == cust
+              - c2 is not changed
+              - c3 is changed and c3.record.stitky == 'KONT' and c3.record.nazev == 'Test 2'
+              - c4 is not changed
+              - bad is failed and 'nesmysl' in bad.msg and 'lastUpdate' in bad.msg
+              - badev is failed
+
+        - {name: Label, vitexus.abraflexi.label: &lab {evidence: adresar, code: "{{ cust }}", labels: [VIP]}, register: l1}
+        - {name: Label again, vitexus.abraflexi.label: *lab, register: l2}
+        - {name: Unlabel, vitexus.abraflexi.label: {evidence: adresar, code: "{{ cust }}", labels: [VIP, KONT], state: absent}, register: l3}
+        - {name: Read labels, vitexus.abraflexi.record_info: {evidence: adresar, code: "{{ cust }}", detail: full}, register: lr}
+        - name: Check labels
+          ansible.builtin.assert:
+            that:
+              - l1 is changed and l1.labels == ['KONT', 'VIP']
+              - l2 is not changed
+              - l3 is changed and lr.records[0].stitky == ''
+
+        - {name: Make file, ansible.builtin.tempfile: {suffix: .txt}, register: tmp}
+        - {name: Fill, ansible.builtin.copy: {content: one, dest: "{{ tmp.path }}", mode: "0600"}}
+        - {name: Attach, vitexus.abraflexi.attachment: &att {evidence: adresar, code: "{{ cust }}", src: "{{ tmp.path }}", name: at t.txt}, register: a1}
+        - {name: Attach again, vitexus.abraflexi.attachment: *att, register: a2}
+        - {name: Refill, ansible.builtin.copy: {content: two, dest: "{{ tmp.path }}", mode: "0600"}}
+        - {name: Attach changed, vitexus.abraflexi.attachment: *att, register: a3}
+        - {name: Attach changed again, vitexus.abraflexi.attachment: *att, register: a4}
+        - {name: Detach, vitexus.abraflexi.attachment: &det {evidence: adresar, code: "{{ cust }}", name: at t.txt, state: absent}, register: a5}
+        - {name: Detach again, vitexus.abraflexi.attachment: *det, register: a6}
+        - name: Check attachments
+          ansible.builtin.assert:
+            that:
+              - a1 is changed and a2 is not changed and a3 is changed
+              - a4 is not changed and a5 is changed and a6 is not changed
+
+        - name: Create invoice with items
+          vitexus.abraflexi.record: &inv
+            evidence: faktura-vydana
+            code: "{{ inv }}"
+            data:
+              typDokl: code:FAKTURA
+              firma: "code:{{ cust }}"
+              datVyst: "2026-11-23"
+              polozkyFaktury:
+                - {nazev: Item A, mnozMj: 1, cenaMj: 10}
+                - {nazev: Item B, mnozMj: 2, cenaMj: 5}
+            subitems_match: {polozkyFaktury: nazev}
+          register: i1
+        - {name: Create invoice again, vitexus.abraflexi.record: *inv, register: i2}
+        - name: Change an item
+          vitexus.abraflexi.record:
+            evidence: faktura-vydana
+            code: "{{ inv }}"
+            data: {polozkyFaktury: [{nazev: Item B, mnozMj: 3}]}
+            subitems_match: {polozkyFaktury: nazev}
+          register: i3
+        - name: Items without match
+          vitexus.abraflexi.record:
+            evidence: faktura-vydana
+            code: "{{ inv }}"
+            data: {polozkyFaktury: [{nazev: Item B}]}
+          register: i4
+          ignore_errors: true
+        - name: Check invoice
+          ansible.builtin.assert:
+            that:
+              - i1 is changed
+              # the server adds a rounding item of its own
+              - i1.record.polozkyFaktury | selectattr('nazev', 'match', 'Item') | map(attribute='mnozMj') | list == ['1.0', '2.0']
+              - i2 is not changed
+              - i3 is changed
+              # the server adds a rounding item of its own
+              - i3.record.polozkyFaktury | selectattr('nazev', 'match', 'Item') | map(attribute='mnozMj') | list == ['1.0', '3.0']
+              - i4 is failed and 'subitems_match' in i4.msg
+
+        - {name: Lock check, vitexus.abraflexi.record_action: &lock {evidence: faktura-vydana, code: "{{ inv }}", action: lock}, check_mode: true, register: k0}
+        - {name: Lock, vitexus.abraflexi.record_action: *lock, register: k1}
+        - {name: Lock again, vitexus.abraflexi.record_action: *lock, register: k2}
+        - {name: Unlock, vitexus.abraflexi.record_action: {evidence: faktura-vydana, code: "{{ inv }}", action: unlock}, register: k3}
+        - {name: Storno, vitexus.abraflexi.record_action: &st {evidence: faktura-vydana, code: "{{ inv }}", action: storno}, register: k4}
+        - {name: Storno again, vitexus.abraflexi.record_action: *st, register: k5}
+        - {name: Report, vitexus.abraflexi.report: &rep {evidence: faktura-vydana, code: "{{ inv }}", dest: "{{ tmp.path }}.pdf"}, register: r1}
+        - {name: Report again, vitexus.abraflexi.report: *rep, register: r2}
+        - name: Check actions and report
+          ansible.builtin.assert:
+            that:
+              - k0 is changed and k1 is changed and k2 is not changed
+              - k3 is changed and k4 is changed and k5 is not changed
+              - r1 is changed and r1.size > 1000 and r2 is not changed
+
+        - name: List
+          vitexus.abraflexi.record_info: {evidence: adresar, filter: "kod = '{{ cust }}'", detail: "custom:kod", limit: 0}
+          register: lst
+        - name: Check list and lookup
+          ansible.builtin.assert:
+            that:
+              - lst.records | length == 1 and lst.row_count == 1
+              - lookup('vitexus.abraflexi.record', 'code:' ~ cust, evidence='adresar', validate_certs=false).kod == cust
+
+        # Other hooks depend on change tracking, so it is never really disabled.
+        - {name: Changes disable check, vitexus.abraflexi.changes: {state: disabled}, check_mode: true, register: ch0}
+        - {name: Changes enable check, vitexus.abraflexi.changes: {state: enabled}, check_mode: true, register: ch1}
+        - {name: Hook, vitexus.abraflexi.webhook: &hook {hook_url: "http://ansible-test.invalid/hook?a=b", secret: "s e&c", skip_url_test: true}, register: h1}
+        - {name: Hook again, vitexus.abraflexi.webhook: *hook, register: h2}
+        - {name: Unhook, vitexus.abraflexi.webhook: {hook_url: "http://ansible-test.invalid/hook?a=b", state: absent}, register: h3}
+        - name: Check changes and hooks
+          ansible.builtin.assert:
+            that:
+              - ch0 is changed != ch1 is changed
+              - h1 is changed and h2 is not changed and h3 is changed
+      always:
+        - {name: Remove hook, vitexus.abraflexi.webhook: {hook_url: "http://ansible-test.invalid/hook?a=b", state: absent}}
+        - {name: Remove invoice, vitexus.abraflexi.record: {evidence: faktura-vydana, code: "{{ inv }}", state: absent}}
+        - {name: Remove customer, vitexus.abraflexi.record: {evidence: adresar, code: "{{ cust }}", state: absent}, register: d1}
+        - {name: Remove customer again, vitexus.abraflexi.record: {evidence: adresar, code: "{{ cust }}", state: absent}, register: d2}
+        - {name: Remove files, ansible.builtin.file: {path: "{{ item }}", state: absent}, loop: ["{{ tmp.path | default('/nonexistent') }}", "{{ tmp.path | default('/nonexistent') }}.pdf"]}
+        - {name: Check cleanup, ansible.builtin.assert: {that: d2 is not changed}}

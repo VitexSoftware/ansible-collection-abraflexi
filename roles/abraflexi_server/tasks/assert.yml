@@ -1,0 +1,26 @@
+---
+- name: Check variant and distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == 'Debian'
+      - abraflexi_server_variant in abraflexi_server_variants
+    fail_msg: "A Debian family system and variant flexibee or abraflexi-server are required"
+
+# The packaged backup script calls /usr/share/flexibee/bin/flexibee-backup
+- name: Check backup support
+  ansible.builtin.assert:
+    that: abraflexi_server_variant == 'flexibee'
+    fail_msg: "abraflexi-server-backup only works with the flexibee variant"
+  when: abraflexi_server_backup_enabled | bool
+
+- name: Read installed packages
+  ansible.builtin.package_facts:
+
+# Switching would leave two database clusters behind.
+- name: Refuse to replace the other variant
+  ansible.builtin.assert:
+    that: >-
+      (abraflexi_server_variants.values() | map(attribute='package')
+      | difference([abraflexi_server_spec.package])
+      | intersect(ansible_facts['packages'].keys() | list)) | length == 0
+    fail_msg: "The other AbraFlexi server variant is already installed"

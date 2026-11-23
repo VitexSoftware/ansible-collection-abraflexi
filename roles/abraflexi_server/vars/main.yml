@@ -1,0 +1,9 @@
+---
+abraflexi_server_variants:
+  flexibee:
+    package: flexibee
+    service: flexibee.service
+  abraflexi-server:
+    package: abraflexi-server
+    service: abraflexi.service
+abraflexi_server_spec: "{{ abraflexi_server_variants[abraflexi_server_variant] }}"

@@ -1,0 +1,25 @@
+---
+- name: Check the requested configuration
+  ansible.builtin.include_tasks: assert.yml
+
+- name: Configure repositories
+  ansible.builtin.include_tasks: repo.yml
+  when: abraflexi_server_repo_manage | bool
+
+- name: Install Java
+  ansible.builtin.include_tasks: java.yml
+  when: abraflexi_server_java_manage | bool
+
+- name: Install the server
+  ansible.builtin.include_tasks: install.yml
+
+- name: Start the server
+  ansible.builtin.include_tasks: service.yml
+
+- name: Configure backups
+  ansible.builtin.include_tasks: backup.yml
+  when: abraflexi_server_backup_enabled | bool
+
+- name: Verify the server
+  ansible.builtin.include_tasks: verify.yml
+  when: abraflexi_server_verify | bool

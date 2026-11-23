@@ -1,0 +1,23 @@
+---
+- name: Install the backup tool
+  ansible.builtin.apt:
+    name: abraflexi-server-backup
+    install_recommends: false
+
+- name: Create the backup directory
+  ansible.builtin.file:
+    path: "{{ abraflexi_server_backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Configure the backup directory
+  ansible.builtin.lineinfile:
+    path: /etc/default/flexibee-server-backup
+    regexp: '^BACKUPDIR='
+    line: 'BACKUPDIR="{{ abraflexi_server_backup_dir }}"'
+    create: true
+    owner: root
+    group: root
+    mode: "0644"

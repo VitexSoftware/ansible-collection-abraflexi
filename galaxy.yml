@@ -1,0 +1,32 @@
+namespace: vitexus
+name: abraflexi
+version: 1.0.0
+readme: README.md
+authors:
+  - Vitex Software <info@vitexsoftware.cz>
+description: >-
+  Modules, lookup and inventory plugins for the AbraFlexi (FlexiBee) REST API
+  and a role installing the AbraFlexi server.
+license:
+  - MIT
+  - GPL-3.0-or-later
+tags:
+  - abraflexi
+  - flexibee
+  - erp
+  - accounting
+  - application
+repository: https://github.com/VitexSoftware/ansible-collection-abraflexi
+homepage: https://github.com/VitexSoftware/ansible-collection-abraflexi
+issues: https://github.com/VitexSoftware/ansible-collection-abraflexi/issues
+dependencies:
+  community.general: ">=7.0.0"
+build_ignore:
+  - '*.tar.gz'
+  - .ansible
+  - .claude
+  - .ansible-lint
+  - .pytest_cache
+  - tests/output
+  - '.env'
+  - 'tests/integration/.env'

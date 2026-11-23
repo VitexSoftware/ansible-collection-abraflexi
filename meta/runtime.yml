@@ -1,0 +1,15 @@
+---
+requires_ansible: ">=2.16.0"
+action_groups:
+  abraflexi:
+    - record
+    - record_info
+    - record_action
+    - attachment
+    - report
+    - label
+    - changes
+    - webhook
+    - server_info
+    - company_info
+    - evidence_info

@@ -1,0 +1,16 @@
+---
+- name: Wait for the port
+  ansible.builtin.wait_for:
+    port: "{{ abraflexi_server_port }}"
+    timeout: "{{ abraflexi_server_start_timeout }}"
+
+# 401 comes from a working server; the certificate is self-signed
+- name: Check the HTTP answer
+  ansible.builtin.uri:
+    url: "https://localhost:{{ abraflexi_server_port }}/status.json"
+    validate_certs: false
+    status_code: [200, 401, 403]
+  register: abraflexi_server_status
+  until: abraflexi_server_status is succeeded
+  retries: 12
+  delay: 10

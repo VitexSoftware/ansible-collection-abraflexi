@@ -1,0 +1,6 @@
+---
+- name: Install the AbraFlexi server
+  hosts: abraflexi
+  become: true
+  roles:
+    - role: vitexus.abraflexi.abraflexi_server

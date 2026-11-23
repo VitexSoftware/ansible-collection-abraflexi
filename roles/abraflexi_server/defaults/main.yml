@@ -1,0 +1,28 @@
+---
+# flexibee: current vendor build from the "borrow" suite
+# abraflexi-server: VitexSoftware repackaged 2022.5.5 build
+abraflexi_server_variant: flexibee
+# Empty installs the candidate version; example: 2026.8.0
+abraflexi_server_version: ""
+# Keep the package from being upgraded (company databases cannot be downgraded)
+abraflexi_server_hold: false
+
+abraflexi_server_repo_manage: true
+abraflexi_server_repo_url: https://repo.vitexsoftware.com
+abraflexi_server_repo_key_url: https://repo.vitexsoftware.com/KEY.gpg
+
+abraflexi_server_java_manage: true
+# Distribution package tried first, Temurin from Adoptium otherwise
+abraflexi_server_java_package: openjdk-11-jre-headless
+abraflexi_server_java_fallback_package: temurin-11-jre
+abraflexi_server_adoptium_url: https://packages.adoptium.net/artifactory/deb
+abraflexi_server_adoptium_key_url: https://packages.adoptium.net/artifactory/api/gpg/key/public
+
+abraflexi_server_service_enabled: true
+abraflexi_server_start_timeout: 300
+abraflexi_server_port: 5434
+abraflexi_server_verify: true
+
+# Only with the flexibee variant
+abraflexi_server_backup_enabled: false
+abraflexi_server_backup_dir: /var/backups/abraflexi

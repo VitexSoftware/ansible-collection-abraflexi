@@ -1,0 +1,35 @@
+---
+# PostgreSQL first: the server postinst creates its own cluster
+# The flexibee postinst fails without the hicolor icon directory
+- name: Install locales, icon theme and PostgreSQL
+  ansible.builtin.apt:
+    name: [locales-all, hicolor-icon-theme, postgresql, postgresql-contrib]
+    install_recommends: false
+
+- name: Preseed a network server installation
+  ansible.builtin.debconf:
+    name: "{{ abraflexi_server_spec.package }}"
+    question: "{{ item.question }}"
+    value: "{{ item.value }}"
+    vtype: select
+  loop:
+    - {question: winstrom/local-network, value: network}
+    - {question: winstrom/server-client, value: server}
+  loop_control:
+    label: "{{ item.question }}"
+  # a pending question would be reported as a change on every run
+  when: abraflexi_server_spec.package not in ansible_facts['packages']
+
+# Recommends include a web browser with a desktop stack
+- name: Install the server package
+  ansible.builtin.apt:
+    name: "{{ abraflexi_server_spec.package }}{{ '=' ~ abraflexi_server_version if abraflexi_server_version else '' }}"
+    install_recommends: false
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    LC_ALL: C.UTF-8
+
+- name: Hold or release the server package
+  ansible.builtin.dpkg_selections:
+    name: "{{ abraflexi_server_spec.package }}"
+    selection: "{{ 'hold' if abraflexi_server_hold | bool else 'install' }}"
