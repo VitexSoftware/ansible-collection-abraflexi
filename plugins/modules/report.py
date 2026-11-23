@@ -11,10 +11,12 @@ short_description: Export an AbraFlexi report to a file
 version_added: "1.0.0"
 description:
   - Exports a printable report of a record, or of the whole evidence, to a file on the host running the module.
+  - New files are only accessible by their owner unless O(mode) is given.
   - PDF output contains its creation time, so an existing file is only rewritten with O(force=true).
 extends_documentation_fragment:
   - vitexus.abraflexi.abraflexi
   - vitexus.abraflexi.abraflexi.company
+  - ansible.builtin.files
 options:
   evidence:
     description: Evidence name, for example V(adresar) or V(faktura-vydana).
@@ -94,13 +96,15 @@ def main():
         language=dict(type="str", choices=["cs", "sk", "en", "de"]),
         force=dict(type="bool", default=False),
     )
-    module = make_module(spec, mutually_exclusive=[("id", "code", "external_id")])
+    module = make_module(spec, mutually_exclusive=[("id", "code", "external_id")],
+                         add_file_common_args=True)
     params = module.params
     dest = params["dest"]
     if os.path.isdir(dest):
         module.fail_json(msg="%s is a directory" % dest)
     if os.path.exists(dest) and not params["force"]:
-        module.exit_json(changed=False, dest=dest)
+        changed = module.set_fs_attributes_if_different(module.load_file_common_arguments(params), False)
+        module.exit_json(changed=changed, dest=dest)
     record_id = None
     if params["id"] is not None or params["code"] or params["external_id"]:
         record_id = must_fetch(module, params["evidence"], detail="id")["id"]
@@ -114,7 +118,13 @@ def main():
     handle, tmp = tempfile.mkstemp(dir=module.tmpdir)
     with os.fdopen(handle, "wb") as out:
         out.write(content)
+    existed = os.path.exists(dest)
+    if not existed:
+        # atomic_move would otherwise apply the umask to a new file
+        module.params["mode"] = params["mode"] = params["mode"] or "0600"
+        os.close(os.open(dest, os.O_CREAT | os.O_WRONLY | os.O_EXCL, 0o600))
     module.atomic_move(tmp, dest)
+    module.set_fs_attributes_if_different(module.load_file_common_arguments(params), True)
     module.exit_json(changed=True, dest=dest, size=len(content))
 
 

@@ -57,6 +57,9 @@ See `roles/abraflexi_server/defaults/main.yml`. `abraflexi_server_variant` selec
 - `flexibee` (default): current build from the `borrow` suite of repo.vitexsoftware.com; supports backups
 - `abraflexi-server`: 2022.5.5 from the distribution suite, without backups
 
+**Restrict access to port 5434 until the first administrator exists.** The role installs a network server
+(`abraflexi_server_network_mode`) and does not configure a firewall.
+
 ## Tests
 
 ```sh

@@ -6,14 +6,14 @@
     name: [locales-all, hicolor-icon-theme, postgresql, postgresql-contrib]
     install_recommends: false
 
-- name: Preseed a network server installation
+- name: Preseed the installation type
   ansible.builtin.debconf:
     name: "{{ abraflexi_server_spec.package }}"
     question: "{{ item.question }}"
     value: "{{ item.value }}"
     vtype: select
   loop:
-    - {question: winstrom/local-network, value: network}
+    - {question: winstrom/local-network, value: "{{ abraflexi_server_network_mode }}"}
     - {question: winstrom/server-client, value: server}
   loop_control:
     label: "{{ item.question }}"

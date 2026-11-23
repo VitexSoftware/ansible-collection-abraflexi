@@ -19,6 +19,10 @@ options:
     type: str
     required: true
     choices: [vitexus.abraflexi.companies]
+  host_prefix:
+    description: Prefix of the host names, which keeps them apart from other hosts.
+    type: str
+    default: abraflexi_
   group:
     description: Group for all the companies.
     type: str
@@ -62,8 +66,11 @@ groups:
   tracked: abraflexi.watchingChanges == 'true'
 """
 
+import re
+
 from ansible.errors import AnsibleParserError
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
+from ansible.utils.unsafe_proxy import wrap_var
 
 from ansible_collections.vitexus.abraflexi.plugins.module_utils.abraflexi import (
     AbraFlexiException,
@@ -95,14 +102,21 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
         group = self.inventory.add_group(self.get_option("group"))
         strict = self.get_option("strict")
         for company in as_list((data.get("companies") or {}).get("company")):
-            host = company["dbNazev"]
+            db_name = str(company["dbNazev"])
+            # the name comes from the server and becomes a host running locally
+            if not re.match(r"[A-Za-z0-9_][A-Za-z0-9_.-]*\Z", db_name):
+                raise AnsibleParserError("Unexpected company identifier %r" % db_name)
+            host = self.get_option("host_prefix") + db_name
+            if host in self.inventory.hosts:
+                raise AnsibleParserError("Host %s is already in the inventory" % host)
             self.inventory.add_host(host, group=group)
             hostvars = {
                 "ansible_connection": "local",
                 "ansible_python_interpreter": "{{ ansible_playbook_python }}",
-                "abraflexi_company": host,
+                "abraflexi_company": db_name,
                 "abraflexi_url": params["url"],
-                "abraflexi": jsonable(company),
+                # never template values received from the server
+                "abraflexi": wrap_var(jsonable(company)),
             }
             for name, value in hostvars.items():
                 self.inventory.set_variable(host, name, value)

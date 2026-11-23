@@ -65,6 +65,10 @@ def make_module(argument_spec=None, company=True, **kwargs):
     kwargs.setdefault("supports_check_mode", True)
     module = AnsibleModule(argument_spec=spec, **kwargs)
     require_lib(module.fail_json)
+    # An empty identifier must not widen the operation to the whole evidence
+    for name in ("code", "external_id"):
+        if module.params.get(name) == "":
+            module.fail_json(msg="%s must not be empty" % name)
     if not module.params["auth_session_id"] and not (module.params["login"] and module.params["password"]):
         module.fail_json(msg="Either auth_session_id or both login and password are required")
     return module

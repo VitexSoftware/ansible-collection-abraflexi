@@ -153,11 +153,14 @@
         - {name: Storno again, vitexus.abraflexi.record_action: *st, register: k5}
         - {name: Report, vitexus.abraflexi.report: &rep {evidence: faktura-vydana, code: "{{ inv }}", dest: "{{ tmp.path }}.pdf"}, register: r1}
         - {name: Report again, vitexus.abraflexi.report: *rep, register: r2}
+        - {name: Report mode, ansible.builtin.stat: {path: "{{ tmp.path }}.pdf"}, register: rs}
+        - {name: Empty code, vitexus.abraflexi.report: {evidence: faktura-vydana, code: "", dest: "{{ tmp.path }}.all"}, register: re, ignore_errors: true}
         - name: Check actions and report
           ansible.builtin.assert:
             that:
               - k0 is changed and k1 is changed and k2 is not changed
               - k3 is changed and k4 is changed and k5 is not changed
+              - rs.stat.mode == '0600' and re is failed and 'empty' in re.msg
               - r1 is changed and r1.size > 1000 and r2 is not changed
 
         - name: List
